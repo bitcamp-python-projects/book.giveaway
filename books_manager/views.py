@@ -6,6 +6,13 @@ from django.contrib.auth.models import User
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from .serializers import UserSerializer
+from .models import Book
+from .serializers import BookSerializer
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
+
+
 
 # Create your views here.
 def index(request):
@@ -25,3 +32,26 @@ class CustomAuthToken(ObtainAuthToken):
         user = serializer.validated_data['user']
         token, created = Token.objects.get_or_create(user=user)
         return Response({'token': token.key})
+    
+
+
+
+class BookListCreateView(ListCreateAPIView):
+    authentication_classes = [TokenAuthentication]
+    serializer_class = BookSerializer
+
+    def get_queryset(self):
+        return Book.objects.all()
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [AllowAny()]
+        return [IsAuthenticated()]
+
+class BookRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    queryset = Book.objects.all()
+    serializer_class = BookSerializer
+
+
